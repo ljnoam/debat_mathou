@@ -1,12 +1,21 @@
 import { GoogleGenAI } from "@google/genai";
 import { Player } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Note: We initialize the AI client inside the function to prevent the app from 
+// crashing on load if the API key is missing in the browser environment.
 
 export const generateDebateQuestion = async (
   player: Player
 ): Promise<string> => {
   try {
+    const apiKey = process.env.API_KEY;
+
+    if (!apiKey) {
+      console.error("API_KEY is missing. Please check your Vercel environment variables.");
+      return "Oups ! La clé API n'est pas configurée. Vérifie les réglages Vercel.";
+    }
+
+    const ai = new GoogleGenAI({ apiKey: apiKey });
     const model = 'gemini-2.5-flash';
     
     const prompt = `
@@ -33,7 +42,8 @@ export const generateDebateQuestion = async (
       contents: prompt,
     });
 
-    return response.text.trim();
+    const text = response.text;
+    return text ? text.trim() : "Une erreur silencieuse est survenue...";
 
   } catch (error) {
     console.error("Error generating question:", error);
